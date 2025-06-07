@@ -1,0 +1,43 @@
+---
+- hosts: all   #all
+  become: true
+  tasks:
+
+    - name: Install apache2
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Change Apache listen port in ports.conf to 9190
+      ansible.builtin.lineinfile:
+        path: /etc/apache2/ports.conf
+        regexp: '^Listen 80'
+        line: 'Listen 9190'
+        state: present
+        backup: yes
+
+    - name: Change VirtualHost port in default site to 9190
+      ansible.builtin.replace:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '^<VirtualHost \*:80>'
+        replace: '<VirtualHost *:9190>'
+        backup: yes
+
+    - name: Allow port 9190 through UFW (if UFW is running)
+      ansible.builtin.shell: ufw allow 9190
+      when: ansible_facts['distribution'] == "Ubuntu"
+
+    - name: Restart apache2
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
+        enabled: true
+          
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: index.html
+        dest: /var/www/html
+        owner: root
+        group: root
+        mode: '0644'

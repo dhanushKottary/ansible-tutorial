@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: all   #all
   become: true
   tasks:
     - name: Install apache httpd
