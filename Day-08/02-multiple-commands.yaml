@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Execute multiple shell commands
+    ansible.builtin.shell: |
+      ls -l
+      docker --version
+      node --version
+    #mvn --version
+  - name: Bring idempotency to files
+    ansible.builtin.file:
+      path: ~/dhaprako1
+      state: directory 
+      mode: '0755'     

@@ -3,23 +3,38 @@
   become: true
 
   tasks:
-    - name: Install security updates
-      ansible.builtin.apt:
-        name: "{{ item }}"
-        state: latest
-      loop:
-        - openssl
-        - openssh
-      ignore_errors: yes 
-    - name: Check if docker is installed
-      ansible.builtin.command: docker --version
-      register: output
-      ignore_errors: yes    
-    - ansible.builtin.debug:
-        var: output
-    - name: Install docker
-      ansible.builtin.apt:
-        name: docker.io
-        state: present
-      when: output.failed
+  - name: Check if openssl and openssh are using latest version
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: latest
+    loop:
+    - openssl
+    - openssh
+    ignore_errors: yes
+  - name: Verify if Docker is installed in the system
+    ansible.builtin.command: docker --version 
+  - name: Verify if Node is installed in the system
+    ansible.builtin.command: node --version
+    register: output
+    ignore_errors: yes
+  - ansible.builtin.debug:
+      var: output
+  - name: Installed Node if it is not installed already
+    ansible.builtin.apt: 
+      name: nodejs
+      state: present
+    when:
+      output.failed
+
+  # Error handling by defining failure
+  - name: Error handling- This will fail if Docker is already installed
+    ansible.builtin.command: docker --version
+    register: result
+    #ignore_errors: yes
+    failed_when:
+      - result.rc == 0
+      - result.stderr == ""
+  # - ansible.builtin.debug:
+  #     var: result    
+      
         
